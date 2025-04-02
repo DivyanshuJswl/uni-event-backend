@@ -99,11 +99,20 @@ app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
+  const connectionState = mongoose.connection.readyState;
+  
+  let dbStatus = "disconnected";
+  if (connectionState === 1) dbStatus = "connected";
+  if (connectionState === 2) dbStatus = "connecting";
+  if (connectionState === 3) dbStatus = "disconnecting";
+
+  console.log(`MongoDB Status: ${dbStatus}`); // Log this in Vercel Logs
+
   res.status(200).json({
-    status: 'healthy',
+    status: "healthy",
     timestamp: new Date(),
     uptime: process.uptime(),
-    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    database: dbStatus
   });
 });
 

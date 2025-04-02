@@ -7,7 +7,7 @@ const connectDB = async () => {
       return;
     }
 
-    await mongoose.connect("mongodb+srv://DEV:ram2122@bajajdb.tmzis.mongodb.net/?retryWrites=true&w=majority&appName=BajajDB", {
+    await mongoose.connect("mongodb+srv://DEV:ram2122@bajajdb.tmzis.mongodb.net/BajajDB?retryWrites=true&w=majority", {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
