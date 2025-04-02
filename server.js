@@ -47,6 +47,10 @@ const authLimiter = rateLimit({
   message: 'Too many authentication attempts, please try again later!'
 });
 
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "Backend is running 🚀" });
+});
+
 app.use('/api', apiLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/signup', authLimiter);
