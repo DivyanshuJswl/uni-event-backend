@@ -47,9 +47,14 @@ const authLimiter = rateLimit({
   message: 'Too many authentication attempts, please try again later!'
 });
 
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Backend is running 🚀" });
+app.get("/", async (req, res) => {
+  try {
+    res.send("API is running");
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
+
 
 app.use('/api', apiLimiter);
 app.use('/api/auth/login', authLimiter);
@@ -109,6 +114,9 @@ app.all('*', (req, res, next) => {
 
 app.use(globalErrorHandler);
 
+app.listen(process.env.PORT || 3000, () => {
+  console.log("Server is running...");
+});
 // Export as serverless function
 module.exports = serverless(app);
 
