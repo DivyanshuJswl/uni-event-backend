@@ -107,3 +107,4 @@ app.use(globalErrorHandler);
 
 // Export as serverless function
 module.exports = serverless(app);
+

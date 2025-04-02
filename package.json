@@ -26,6 +26,7 @@
     "mongoose": "^8.13.1",
     "morgan": "^1.10.0",
     "nodemon": "^3.1.9",
+    "serverless-http": "^3.2.0",
     "uni-event-backend": "file:",
     "xss-clean": "^0.1.4"
   }
