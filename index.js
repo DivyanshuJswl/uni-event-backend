@@ -1,5 +1,5 @@
-require('dotenv').config();
 const express = require('express');
+const serverless = require('serverless-http'); // Convert Express to serverless
 const mongoose = require('mongoose');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -9,14 +9,13 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
-const path = require('path');
 const compression = require('compression');
 const connectDB = require('./config/connectdb');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
-const walletRoutes = require('./routes/walletRoutes'); // Single clean import
+const walletRoutes = require('./routes/walletRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
 // Import error handlers
@@ -72,16 +71,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Static files
-app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: '1y',
-  setHeaders: (res, path) => {
-    if (path.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-cache');
-    }
-  }
-}));
-
 // ===== DATABASE CONNECTION =====
 connectDB();
 
@@ -94,15 +83,9 @@ mongoose.connection.on('error', (err) => {
 });
 
 // ===== ROUTES =====
-// Debugging: Print registered routes
-app.use((req, res, next) => {
-  console.log(`Incoming request: ${req.method} ${req.path}`);
-  next();
-});
-
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
-app.use('/api/wallet', walletRoutes); // Make sure this line is active
+app.use('/api/wallet', walletRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Health check
@@ -117,37 +100,10 @@ app.get('/api/health', (req, res) => {
 
 // ===== ERROR HANDLING =====
 app.all('*', (req, res, next) => {
-  console.error(`Route not found: ${req.originalUrl}`);
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
 app.use(globalErrorHandler);
 
-// ===== SERVER START =====
-const port = process.env.PORT || 7000;
-const server = app.listen(port, () => {
-  console.log(`Server running on port ${port} in ${process.env.NODE_ENV} mode`);
-  console.log('Registered routes:');
-  console.log('- POST /api/auth/signup');
-  console.log('- POST /api/auth/login');
-  console.log('- PATCH /api/wallet');
-  console.log('- GET /api/events');
-  // Add more routes as needed
-});
-
-process.on('unhandledRejection', (err) => {
-  console.error('UNHANDLED REJECTION! Shutting down...');
-  console.error('Error:', err.name, err.message);
-  server.close(() => process.exit(1));
-});
-
-process.on('uncaughtException', (err) => {
-  console.error('UNCAUGHT EXCEPTION! Shutting down...');
-  console.error('Error:', err.name, err.message);
-  server.close(() => process.exit(1));
-});
-
-process.on('SIGTERM', () => {
-  console.log('SIGTERM RECEIVED. Shutting down gracefully');
-  server.close(() => console.log('Process terminated'));
-});
+// Export as serverless function
+module.exports = serverless(app);
