@@ -1,15 +1,23 @@
 const mongoose = require("mongoose");
-require("dotenv").config();
+
+let isConnected = false; // Track DB connection status
 
 const connectDB = async () => {
+  if (isConnected) {
+    console.log("Using existing database connection");
+    return;
+  }
+
   try {
-    // Make sure to use the same variable name you have in .env
-    const conn = await mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI, {
-      // No need for deprecated options in Mongoose 6+
+    const db = await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+
+    isConnected = db.connections[0].readyState === 1;
+    console.log("Connected to MongoDB");
   } catch (error) {
-    console.error(`Error: ${error.message}`);
+    console.error("MongoDB connection error:", error);
     process.exit(1);
   }
 };
