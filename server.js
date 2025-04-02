@@ -35,7 +35,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Rate limiting
 const apiLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, 
+  windowMs: 60 * 60 * 1000,
   max: 300,
   message: 'Too many requests from this IP, please try again in an hour!',
   skipSuccessfulRequests: true
@@ -59,7 +59,9 @@ app.use(cookieParser(process.env.COOKIE_SECRET));
 // Security middleware
 app.use(mongoSanitize());
 app.use(xss());
-app.use(hpp({ whitelist: ['category', 'date', 'status'] }));
+app.use(hpp({
+  whitelist: ['category', 'date', 'status']
+}));
 
 // CORS
 app.use(cors({
@@ -70,13 +72,24 @@ app.use(cors({
 }));
 
 // ===== DATABASE CONNECTION =====
-let isConnected = false; // Track database connection status
-const connectToDB = async () => {
-  if (isConnected) return;
-  await connectDB();
-  isConnected = true;
-};
-connectToDB().catch((err) => console.error("DB Connection Error:", err));
+connectDB();
+
+mongoose.connection.on('connected', () => {
+  console.log('Mongoose connected to DB');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('Mongoose connection error:', err);
+});
+
+// ===== ROOT ROUTE =====
+app.get("/", (req, res) => {
+  res.status(200).json({
+    message: "API is running successfully!",
+    success: true,
+    timestamp: new Date().toISOString()
+  });
+});
 
 // ===== ROUTES =====
 app.use('/api/auth', authRoutes);
@@ -84,7 +97,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Health check route
+// Health check
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'healthy',
@@ -101,6 +114,6 @@ app.all('*', (req, res, next) => {
 
 app.use(globalErrorHandler);
 
-// Export as serverless function (NO app.listen)
+// ===== EXPORT AS SERVERLESS FUNCTION =====
 module.exports = app;
 module.exports.handler = serverless(app);
